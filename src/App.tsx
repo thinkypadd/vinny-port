@@ -322,7 +322,6 @@ export const App: React.FC = () => {
 
       {/* Fixed Minimalist Top Header */}
       <TopNav
-        onOpenApp={openApp}
         onTidyIcons={handleTidy}
         isDark={isDark}
         onToggleTheme={handleToggleTheme}

@@ -194,11 +194,6 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
         >
           {item.label}
         </span>
-        {item.subtext && (
-          <span className="text-[9px] font-mono font-medium text-neutral-700 dark:text-neutral-300 mt-0.5">
-            {item.subtext}
-          </span>
-        )}
       </div>
     </div>
   );

@@ -1,29 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { portfolioData } from '../data/portfolio';
 
 export const BottomBar: React.FC = () => {
-  const [timeStr, setTimeStr] = useState('');
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTimeStr(
-        now.toLocaleTimeString('en-US', {
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        })
-      );
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <footer className="fixed bottom-4 md:bottom-7 left-0 right-0 z-30 flex flex-col items-center pointer-events-none select-none [&>*]:pointer-events-auto">
-      {/* Links separated by slashes (Oklama signature style) */}
+    <footer className="fixed bottom-6 md:bottom-8 left-0 right-0 z-30 flex justify-center items-center pointer-events-none select-none [&>*]:pointer-events-auto">
+      {/* Links separated by slashes (Oklama reference style) */}
       <div className="text-black dark:text-white font-mono text-xs md:text-sm font-medium flex flex-wrap justify-center items-center gap-x-2 px-4">
         <a
           className="hover:text-[#cd3f25] text-black dark:text-white transition-colors"
@@ -58,15 +39,6 @@ export const BottomBar: React.FC = () => {
         >
           email
         </a>
-      </div>
-
-      {/* Minimal timestamp & status line */}
-      <div className="text-[10px] font-mono text-neutral-600 dark:text-neutral-400 mt-1 tracking-wider font-semibold">
-        <span>{portfolioData.location.toLowerCase()}</span>
-        <span className="mx-1.5 text-neutral-400">•</span>
-        <span>{timeStr}</span>
-        <span className="mx-1.5 text-neutral-400">•</span>
-        <span className="text-emerald-700 dark:text-emerald-400 font-bold">sys:ok</span>
       </div>
     </footer>
   );

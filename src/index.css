@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light dark;
+}
+
+/* Custom scrollbars */
+/* Win98 scrollbar */
+.win98-scrollbar::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+  background-color: #dfdfdf;
+}
+
+.win98-scrollbar::-webkit-scrollbar-button {
+  background-color: #c0c0c0;
+  border: 1px solid #ffffff;
+  border-right-color: #808080;
+  border-bottom-color: #808080;
+  height: 16px;
+  width: 16px;
+}
+
+.win98-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #c0c0c0;
+  box-shadow: inset 1px 1px #ffffff, inset -1px -1px #808080;
+}
+
+/* Mac scrollbar */
+.mac-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.mac-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mac-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+
+.mac-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Win98 Button styling */
+.win98-btn {
+  background-color: #c0c0c0;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #000000;
+  border-bottom: 2px solid #000000;
+  box-shadow: inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #808080;
+  color: #000000;
+  font-family: 'MS Sans Serif', Tahoma, sans-serif;
+  user-select: none;
+}
+
+.win98-btn:active, .win98-btn-pressed {
+  border-top: 2px solid #000000;
+  border-left: 2px solid #000000;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  box-shadow: inset 1px 1px 0 #808080, inset -1px -1px 0 #dfdfdf;
+  padding-top: calc(theme('spacing.1') + 1px);
+  padding-left: calc(theme('spacing.2') + 1px);
+}
+
+/* Win98 Inset field */
+.win98-field {
+  background-color: #ffffff;
+  color: #000000;
+  border-top: 2px solid #808080;
+  border-left: 2px solid #808080;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  box-shadow: inset 1px 1px 0 #000000, inset -1px -1px 0 #dfdfdf;
+}
+
+/* Win98 Window outer frame */
+.win98-frame {
+  background-color: #c0c0c0;
+  border-top: 2px solid #dfdfdf;
+  border-left: 2px solid #dfdfdf;
+  border-right: 2px solid #000000;
+  border-bottom: 2px solid #000000;
+  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
+}
+
+/* Win98 Titlebar */
+.win98-titlebar-active {
+  background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+  color: #ffffff;
+}
+
+.win98-titlebar-inactive {
+  background: #808080;
+  color: #c0c0c0;
+}
+
+/* Disable text selection during drag */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}

@@ -21,49 +21,88 @@ export const Window: React.FC<WindowProps> = ({
   children
 }) => {
   const [pos, setPos] = useState(windowState.position);
+  const windowRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ startX: 0, startY: 0, initX: 0, initY: 0 });
+  const currentPosRef = useRef(pos);
+  const rafIdRef = useRef<number | null>(null);
 
-  // Sync internal position when state resets
+  // Sync internal position when state resets or windowState updates externally
   useEffect(() => {
     setPos(windowState.position);
-  }, [windowState.position]);
+    currentPosRef.current = windowState.position;
+    if (windowRef.current && !windowState.isMaximized) {
+      windowRef.current.style.left = `${windowState.position.x}px`;
+      windowRef.current.style.top = `${windowState.position.y}px`;
+    }
+  }, [windowState.position, windowState.isMaximized]);
 
-  // Dragging by header bar
-  const handlePointerDown = (e: React.PointerEvent) => {
-    // Primary mouse or touch only, ignore buttons
+  // Dragging by header bar with direct DOM updates (Zero React re-render lag)
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     if ((e.target as HTMLElement).closest('button')) return;
 
     onFocus();
+    if (windowState.isMaximized) return;
+
     isDraggingRef.current = true;
     dragStartRef.current = {
       startX: e.clientX,
       startY: e.clientY,
-      initX: pos.x,
-      initY: pos.y
+      initX: currentPosRef.current.x,
+      initY: currentPosRef.current.y
     };
 
+    // Capture pointer to track movements smoothly even outside window bounds
+    const titleBar = e.currentTarget;
+    try {
+      titleBar.setPointerCapture(e.pointerId);
+    } catch {
+      // fallback if not supported
+    }
+
     const handlePointerMove = (moveEvent: PointerEvent) => {
-      if (!isDraggingRef.current || windowState.isMaximized) return;
+      if (!isDraggingRef.current) return;
 
       const dx = moveEvent.clientX - dragStartRef.current.startX;
       const dy = moveEvent.clientY - dragStartRef.current.startY;
 
-      // Keep inside screen
       const newX = Math.max(0, Math.min(window.innerWidth - 120, dragStartRef.current.initX + dx));
       const newY = Math.max(0, Math.min(window.innerHeight - 80, dragStartRef.current.initY + dy));
 
-      setPos({ x: newX, y: newY });
+      currentPosRef.current = { x: newX, y: newY };
+
+      if (rafIdRef.current === null) {
+        rafIdRef.current = requestAnimationFrame(() => {
+          if (windowRef.current) {
+            windowRef.current.style.left = `${currentPosRef.current.x}px`;
+            windowRef.current.style.top = `${currentPosRef.current.y}px`;
+          }
+          rafIdRef.current = null;
+        });
+      }
     };
 
-    const handlePointerUp = () => {
+    const handlePointerUp = (upEvent: PointerEvent) => {
       isDraggingRef.current = false;
+      try {
+        titleBar.releasePointerCapture(upEvent.pointerId);
+      } catch {
+        // fallback
+      }
+
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
+
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+
+      setPos(currentPosRef.current);
     };
 
-    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
     window.addEventListener('pointerup', handlePointerUp);
   };
 
@@ -71,12 +110,13 @@ export const Window: React.FC<WindowProps> = ({
     return null;
   }
 
-  const isMobile = window.innerWidth < 640;
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
   return (
     <div
+      ref={windowRef}
       onPointerDown={onFocus}
-      className={`fixed flex flex-col font-mono select-text bg-white dark:bg-[#0c0c0c] border-2 border-black dark:border-white transition-all ${
+      className={`fixed flex flex-col font-mono select-text bg-white dark:bg-[#0c0c0c] border-2 border-black dark:border-white ${
         windowState.isMaximized || isMobile
           ? 'inset-2 md:inset-8 z-50 shadow-[8px_8px_0_rgba(0,0,0,1)] dark:shadow-[8px_8px_0_rgba(255,255,255,0.7)]'
           : 'shadow-[6px_6px_0_rgba(0,0,0,1)] dark:shadow-[6px_6px_0_rgba(255,255,255,0.6)]'
@@ -89,20 +129,21 @@ export const Window: React.FC<WindowProps> = ({
               top: `${pos.y}px`,
               width: `${Math.min(window.innerWidth - 30, windowState.size.width)}px`,
               height: `${Math.min(window.innerHeight - 60, windowState.size.height)}px`,
-              zIndex: windowState.zIndex
+              zIndex: windowState.zIndex,
+              willChange: 'left, top'
             }
       }
     >
       {/* Title Bar (Oklama brutalist style) */}
       <div
         onPointerDown={handlePointerDown}
-        className={`px-3 py-2 border-b-2 border-black dark:border-white flex items-center justify-between cursor-move select-none ${
+        className={`px-3 py-2 border-b-2 border-black dark:border-white flex items-center justify-between cursor-move select-none touch-none ${
           isActive
             ? 'bg-black text-white dark:bg-white dark:text-black'
-            : 'bg-neutral-200 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-300'
+            : 'bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white'
         }`}
       >
-        {/* Title & Path */}
+        {/* Title */}
         <div className="flex items-center space-x-2 truncate pr-2">
           <span className="text-xs font-bold truncate tracking-tight">
             {windowState.title}
@@ -146,8 +187,8 @@ export const Window: React.FC<WindowProps> = ({
         </div>
       </div>
 
-      {/* Window Body Content */}
-      <div className="flex-1 overflow-auto p-4 md:p-6 bg-white dark:bg-[#0c0c0c] text-black dark:text-neutral-200">
+      {/* Window Body Content (high contrast in light mode) */}
+      <div className="flex-1 overflow-auto p-4 md:p-6 bg-white dark:bg-[#0c0c0c] text-black dark:text-white">
         {children}
       </div>
     </div>

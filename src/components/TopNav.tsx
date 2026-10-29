@@ -34,7 +34,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   }, []);
 
   return (
-    <header className="fixed top-5 left-5 right-5 md:top-7 md:left-7 md:right-7 z-30 text-black/60 dark:text-white/60 font-mono text-xs md:text-sm flex justify-between pointer-events-none select-none [&>*]:pointer-events-auto">
+    <header className="fixed top-5 left-5 right-5 md:top-7 md:left-7 md:right-7 z-30 text-black dark:text-white font-mono text-xs md:text-sm flex justify-between pointer-events-none select-none [&>*]:pointer-events-auto">
       {/* Brand / Moniker */}
       <div className="flex items-center space-x-3">
         <button
@@ -44,8 +44,8 @@ export const TopNav: React.FC<TopNavProps> = ({
         >
           {portfolioData.moniker}
         </button>
-        <span className="text-black/30 dark:text-white/30 hidden sm:inline">/</span>
-        <span className="text-black/40 dark:text-white/40 hidden sm:inline text-xs">
+        <span className="text-neutral-400 dark:text-neutral-500 hidden sm:inline">/</span>
+        <span className="text-neutral-600 dark:text-neutral-400 hidden sm:inline text-xs">
           portfolio
         </span>
       </div>
@@ -54,21 +54,21 @@ export const TopNav: React.FC<TopNavProps> = ({
       <nav className="flex items-center space-x-1 sm:space-x-4">
         <button
           onClick={() => onOpenApp('works')}
-          className="hover:text-[#cd3f25] block p-1 transition-colors cursor-pointer"
+          className="hover:text-[#cd3f25] text-black dark:text-white font-medium block p-1 transition-colors cursor-pointer"
         >
           works
         </button>
 
         <button
           onClick={() => onOpenApp('nuthoughts')}
-          className="hover:text-[#cd3f25] block p-1 transition-colors cursor-pointer"
+          className="hover:text-[#cd3f25] text-black dark:text-white font-medium block p-1 transition-colors cursor-pointer"
         >
           thoughts
         </button>
 
         <button
           onClick={() => onOpenApp('archive')}
-          className="hover:text-[#cd3f25] block p-1 transition-colors cursor-pointer"
+          className="hover:text-[#cd3f25] text-black dark:text-white font-medium block p-1 transition-colors cursor-pointer"
         >
           archive
         </button>
@@ -77,19 +77,19 @@ export const TopNav: React.FC<TopNavProps> = ({
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="hover:text-[#cd3f25] block p-1 transition-colors cursor-pointer"
+            className="hover:text-[#cd3f25] text-black dark:text-white font-medium block p-1 transition-colors cursor-pointer"
           >
             connect {dropdownOpen ? '↓' : '→'}
           </button>
 
           {dropdownOpen && (
-            <div className="absolute top-full right-0 mt-1 border-2 border-black dark:border-white bg-white dark:bg-black grid py-1 min-w-[170px] shadow-[4px_4px_0_rgba(0,0,0,0.25)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.2)] z-50">
+            <div className="absolute top-full right-0 mt-1 border-2 border-black dark:border-white bg-white dark:bg-black grid py-1 min-w-[170px] shadow-[4px_4px_0_rgba(0,0,0,0.25)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.2)] z-50 text-black dark:text-white">
               <button
                 onClick={() => {
                   onOpenApp('terminal');
                   setDropdownOpen(false);
                 }}
-                className="hover:text-[#cd3f25] text-left whitespace-nowrap py-1.5 px-3 block transition-colors text-xs"
+                className="hover:text-[#cd3f25] text-left text-black dark:text-white whitespace-nowrap py-1.5 px-3 block transition-colors text-xs font-medium cursor-pointer"
               >
                 &gt; terminal.sh
               </button>
@@ -98,13 +98,13 @@ export const TopNav: React.FC<TopNavProps> = ({
                   onOpenApp('resume');
                   setDropdownOpen(false);
                 }}
-                className="hover:text-[#cd3f25] text-left whitespace-nowrap py-1.5 px-3 block transition-colors text-xs"
+                className="hover:text-[#cd3f25] text-left text-black dark:text-white whitespace-nowrap py-1.5 px-3 block transition-colors text-xs font-medium cursor-pointer"
               >
                 resume.txt
               </button>
               <a
                 href={`mailto:${portfolioData.contacts.email}`}
-                className="hover:text-[#cd3f25] text-left whitespace-nowrap py-1.5 px-3 block transition-colors text-xs border-t border-neutral-200 dark:border-neutral-800"
+                className="hover:text-[#cd3f25] text-left text-black dark:text-white whitespace-nowrap py-1.5 px-3 block transition-colors text-xs font-medium border-t border-neutral-300 dark:border-neutral-800"
               >
                 email direct ↗
               </a>
@@ -112,7 +112,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 href={portfolioData.contacts.github}
                 target="_blank"
                 rel="noreferrer"
-                className="hover:text-[#cd3f25] text-left whitespace-nowrap py-1.5 px-3 block transition-colors text-xs"
+                className="hover:text-[#cd3f25] text-left text-black dark:text-white whitespace-nowrap py-1.5 px-3 block transition-colors text-xs font-medium"
               >
                 github ↗
               </a>
@@ -121,24 +121,24 @@ export const TopNav: React.FC<TopNavProps> = ({
         </div>
 
         {/* Minimalist Controls */}
-        <div className="flex items-center pl-2 space-x-1 border-l border-neutral-300 dark:border-neutral-700">
+        <div className="flex items-center pl-2 space-x-1 border-l border-neutral-400 dark:border-neutral-700">
           <button
             onClick={onTidyIcons}
-            className="hover:text-[#cd3f25] p-1 text-[11px] transition-colors cursor-pointer"
+            className="hover:text-[#cd3f25] text-black dark:text-white p-1 text-[11px] font-semibold transition-colors cursor-pointer"
             title="Snap icons to original positions"
           >
             [tidy]
           </button>
           <button
             onClick={onToggleSound}
-            className="hover:text-[#cd3f25] p-1 text-[11px] transition-colors cursor-pointer"
+            className="hover:text-[#cd3f25] text-black dark:text-white p-1 text-[11px] font-semibold transition-colors cursor-pointer"
             title={soundEnabled ? 'Mute audio' : 'Enable audio clicks'}
           >
             [{soundEnabled ? 'audio:on' : 'audio:off'}]
           </button>
           <button
             onClick={onToggleTheme}
-            className="hover:text-[#cd3f25] p-1 text-[11px] transition-colors cursor-pointer font-bold"
+            className="hover:text-[#cd3f25] text-black dark:text-white p-1 text-[11px] font-bold transition-colors cursor-pointer"
             title="Toggle light / dark contrast"
           >
             [{isDark ? 'light' : 'invert'}]

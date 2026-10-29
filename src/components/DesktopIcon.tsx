@@ -27,22 +27,24 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
 }) => {
   const [pos, setPos] = useState(item.position);
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef<{ startX: number; startY: number; initPosX: number; initPosY: number }>({
-    startX: 0,
-    startY: 0,
-    initPosX: 0,
-    initPosY: 0
-  });
+  const iconRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef({ startX: 0, startY: 0, initPosX: 0, initPosY: 0 });
+  const currentPosRef = useRef(pos);
   const hasMovedRef = useRef(false);
+  const rafIdRef = useRef<number | null>(null);
 
   // Sync if external item position updates (e.g. Tidy layout)
   useEffect(() => {
     setPos(item.position);
+    currentPosRef.current = item.position;
+    if (iconRef.current) {
+      iconRef.current.style.left = `${item.position.x}px`;
+      iconRef.current.style.top = `${item.position.y}px`;
+    }
   }, [item.position]);
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    // Only primary button
-    if (e.button !== 0) return;
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
     e.stopPropagation();
 
     onSelect(item.id);
@@ -52,9 +54,16 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
     dragStartRef.current = {
       startX: e.clientX,
       startY: e.clientY,
-      initPosX: pos.x,
-      initPosY: pos.y
+      initPosX: currentPosRef.current.x,
+      initPosY: currentPosRef.current.y
     };
+
+    const targetEl = e.currentTarget;
+    try {
+      targetEl.setPointerCapture(e.pointerId);
+    } catch {
+      // fallback
+    }
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
       const dx = moveEvent.clientX - dragStartRef.current.startX;
@@ -64,31 +73,51 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
         hasMovedRef.current = true;
       }
 
-      // Constrain within desktop boundaries
       const newX = Math.max(10, Math.min(window.innerWidth - 100, dragStartRef.current.initPosX + dx));
       const newY = Math.max(45, Math.min(window.innerHeight - 110, dragStartRef.current.initPosY + dy));
 
-      setPos({ x: newX, y: newY });
-    };
+      currentPosRef.current = { x: newX, y: newY };
 
-    const handlePointerUp = () => {
-      setIsDragging(false);
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-
-      if (hasMovedRef.current && onDragEnd) {
-        onDragEnd(item.id, pos);
+      if (rafIdRef.current === null) {
+        rafIdRef.current = requestAnimationFrame(() => {
+          if (iconRef.current) {
+            iconRef.current.style.left = `${currentPosRef.current.x}px`;
+            iconRef.current.style.top = `${currentPosRef.current.y}px`;
+          }
+          rafIdRef.current = null;
+        });
       }
     };
 
-    window.addEventListener('pointermove', handlePointerMove);
+    const handlePointerUp = (upEvent: PointerEvent) => {
+      setIsDragging(false);
+      try {
+        targetEl.releasePointerCapture(upEvent.pointerId);
+      } catch {
+        // fallback
+      }
+
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+
+      setPos(currentPosRef.current);
+      if (hasMovedRef.current && onDragEnd) {
+        onDragEnd(item.id, currentPosRef.current);
+      }
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
     window.addEventListener('pointerup', handlePointerUp);
   };
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!hasMovedRef.current) {
-      // Single tap/click opens immediately on mobile or if already selected
       if (window.innerWidth < 768 || isSelected) {
         onOpen(item.id);
       } else {
@@ -126,15 +155,17 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
 
   return (
     <div
+      ref={iconRef}
       data-drag="true"
       data-index={item.id}
-      className={`absolute flex flex-col items-center justify-center cursor-pointer select-none touch-none transition-shadow ${
+      className={`absolute flex flex-col items-center justify-center cursor-pointer select-none touch-none ${
         isDragging ? 'z-40 opacity-80 cursor-grabbing' : 'z-20'
       }`}
       style={{
         left: `${pos.x}px`,
         top: `${pos.y}px`,
         width: '94px',
+        willChange: 'left, top',
         WebkitTouchCallout: 'none'
       }}
       onPointerDown={handlePointerDown}
@@ -143,28 +174,28 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
     >
       {/* Icon visual */}
       <div
-        className={`flex items-center justify-center p-1 rounded-sm transition-transform ${
+        className={`flex items-center justify-center p-1 rounded-sm ${
           isSelected
-            ? 'ring-1 ring-black/40 dark:ring-white/50 bg-black/5 dark:bg-white/10 scale-105'
+            ? 'ring-1 ring-black dark:ring-white bg-black/10 dark:bg-white/15 scale-105'
             : 'hover:scale-105'
         }`}
       >
         {renderIconGraphic()}
       </div>
 
-      {/* Label Badge (matches oklama's bg-white text badge) */}
+      {/* Label Badge (matches oklama's bg-white text badge with high contrast) */}
       <div className="mt-1 flex flex-col items-center">
         <span
-          className={`text-center font-mono text-[11px] leading-tight px-1 py-0.5 border ${
+          className={`text-center font-mono text-[11px] font-semibold leading-tight px-1.5 py-0.5 border ${
             isSelected
-              ? 'bg-[#111111] text-white border-black dark:bg-white dark:text-black dark:border-white shadow-[2px_2px_0_rgba(0,0,0,0.3)]'
-              : 'bg-white text-black/90 border-neutral-300 dark:bg-black dark:text-neutral-200 dark:border-neutral-700 shadow-[1px_1px_0_rgba(0,0,0,0.15)]'
+              ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-[2px_2px_0_rgba(0,0,0,0.3)]'
+              : 'bg-white text-black border-neutral-400 dark:bg-black dark:text-white dark:border-neutral-700 shadow-[1px_1px_0_rgba(0,0,0,0.15)]'
           }`}
         >
           {item.label}
         </span>
         {item.subtext && (
-          <span className="text-[9px] font-mono text-neutral-500 dark:text-neutral-400 mt-0.5">
+          <span className="text-[9px] font-mono font-medium text-neutral-700 dark:text-neutral-300 mt-0.5">
             {item.subtext}
           </span>
         )}

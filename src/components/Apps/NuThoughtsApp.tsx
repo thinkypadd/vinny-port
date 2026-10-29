@@ -9,9 +9,9 @@ export const NuThoughtsApp: React.FC<NuThoughtsAppProps> = ({ onBack }) => {
   const { thought } = portfolioData;
 
   return (
-    <div className="max-w-[480px] mx-auto py-2 font-mono text-sm leading-relaxed select-text">
+    <div className="max-w-[480px] mx-auto py-2 font-mono text-sm leading-relaxed select-text text-black dark:text-white">
       {/* Top Header timestamp */}
-      <div className="flex items-center justify-between pb-6 border-b border-neutral-200 dark:border-neutral-800 text-xs text-neutral-500 dark:text-neutral-400">
+      <div className="flex items-center justify-between pb-6 border-b border-neutral-300 dark:border-neutral-800 text-xs text-neutral-700 dark:text-neutral-300 font-medium">
         <div className="flex items-center space-x-2">
           {onBack && (
             <button
@@ -21,15 +21,15 @@ export const NuThoughtsApp: React.FC<NuThoughtsAppProps> = ({ onBack }) => {
               ←
             </button>
           )}
-          <span>{thought.date}</span>
+          <span className="font-semibold text-black dark:text-white">{thought.date}</span>
         </div>
-        <span className="text-[10px] uppercase tracking-wider text-neutral-400">
+        <span className="text-[10px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-semibold">
           doc // statement
         </span>
       </div>
 
       {/* Paragraphs */}
-      <div className="space-y-4 pt-6 text-neutral-800 dark:text-neutral-200">
+      <div className="space-y-4 pt-6 text-black dark:text-neutral-100">
         {thought.paragraphs.map((p, idx) => (
           <p key={idx} className="leading-6">
             {p}
@@ -37,31 +37,31 @@ export const NuThoughtsApp: React.FC<NuThoughtsAppProps> = ({ onBack }) => {
         ))}
 
         {/* Signature */}
-        <p className="pt-3 font-bold text-black dark:text-white tracking-wide">
+        <p className="pt-3 font-bold text-black dark:text-white tracking-wide text-base">
           {thought.signature}
         </p>
       </div>
 
       {/* Inset Photo (matches oklama's photo in nuthoughts) */}
-      <div className="mt-8 pt-6 border-t border-neutral-200 dark:border-neutral-800 flex flex-col items-center">
-        <div className="p-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 shadow-[3px_3px_0_rgba(0,0,0,0.15)] dark:shadow-[3px_3px_0_rgba(255,255,255,0.1)] max-w-[260px] w-full">
+      <div className="mt-8 pt-6 border-t border-neutral-300 dark:border-neutral-800 flex flex-col items-center">
+        <div className="p-2 bg-white dark:bg-neutral-900 border-2 border-black dark:border-neutral-700 shadow-[3px_3px_0_rgba(0,0,0,0.15)] dark:shadow-[3px_3px_0_rgba(255,255,255,0.1)] max-w-[260px] w-full">
           <div className="w-full h-40 bg-neutral-950 overflow-hidden relative flex flex-col items-center justify-center border border-neutral-800">
             {/* Subtle retro grain / workspace art */}
             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:12px_12px]" />
             <div className="text-center z-10 px-4">
-              <span className="text-[11px] text-neutral-400 tracking-widest block font-bold mb-1">
+              <span className="text-[11px] text-neutral-200 tracking-widest block font-bold mb-1">
                 STUDIO // SILENCE
               </span>
-              <span className="text-[9px] text-neutral-600 block">
+              <span className="text-[9px] text-neutral-400 block font-medium">
                 37.7749° N, 122.4194° W
               </span>
             </div>
-            <div className="absolute bottom-2 right-2 text-[8px] text-neutral-600">
+            <div className="absolute bottom-2 right-2 text-[8px] text-neutral-400 font-mono">
               #2026-F
             </div>
           </div>
           {thought.imageCaption && (
-            <p className="text-[10px] text-center text-neutral-500 dark:text-neutral-400 mt-2 font-mono">
+            <p className="text-[10px] text-center text-neutral-800 dark:text-neutral-300 mt-2 font-mono font-medium">
               {thought.imageCaption}
             </p>
           )}

@@ -7,7 +7,6 @@ export const AudioMemoApp: React.FC = () => {
   const synthNodesRef = useRef<{ osc1: OscillatorNode; osc2: OscillatorNode; gain: GainNode } | null>(null);
   const timerRef = useRef<number | null>(null);
 
-  // Setup / Clean WebAudio
   const togglePlay = () => {
     if (isPlaying) {
       stopAudio();
@@ -26,19 +25,18 @@ export const AudioMemoApp: React.FC = () => {
         ctx.resume();
       }
 
-      // Generate a warm, gentle ambient lo-fi chord (C minor 9: C, Eb, G, Bb, D)
+      // Warm ambient lo-fi drone (C minor 9)
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const filter = ctx.createBiquadFilter();
       const gain = ctx.createGain();
 
       osc1.type = 'triangle';
-      osc1.frequency.setValueAtTime(130.81, ctx.currentTime); // C3
+      osc1.frequency.setValueAtTime(130.81, ctx.currentTime);
 
       osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(196.0, ctx.currentTime); // G3
+      osc2.frequency.setValueAtTime(196.0, ctx.currentTime);
 
-      // Low pass filter for warm tape lo-fi sound
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(450, ctx.currentTime);
 
@@ -56,7 +54,6 @@ export const AudioMemoApp: React.FC = () => {
       synthNodesRef.current = { osc1, osc2, gain };
       setIsPlaying(true);
 
-      // Playback counter
       timerRef.current = window.setInterval(() => {
         setPlaybackTime((prev) => (prev >= 60 ? 0 : prev + 1));
       }, 1000);
@@ -102,13 +99,13 @@ export const AudioMemoApp: React.FC = () => {
   };
 
   return (
-    <div className="font-mono text-xs md:text-sm space-y-6 max-w-md mx-auto">
+    <div className="font-mono text-xs md:text-sm space-y-6 max-w-md mx-auto text-black dark:text-white">
       <div className="flex items-center justify-between pb-3 border-b-2 border-black dark:border-white">
-        <span className="font-bold text-black dark:text-white">AUDIO: voice_memo_01.wav</span>
-        <span className="text-neutral-500">[WEB AUDIO SYNTH]</span>
+        <span className="font-bold text-black dark:text-white text-sm">AUDIO: voice_memo_01.wav</span>
+        <span className="text-neutral-600 dark:text-neutral-400 font-semibold">[WEB AUDIO SYNTH]</span>
       </div>
 
-      {/* Cassette Graphic with spinning spools */}
+      {/* Cassette Graphic */}
       <div className="p-4 bg-neutral-900 border-2 border-black dark:border-white shadow-[4px_4px_0_rgba(0,0,0,0.3)] text-neutral-200 space-y-4">
         {/* Cassette window */}
         <div className="h-28 bg-neutral-950 border border-neutral-800 rounded relative flex items-center justify-around px-8">
@@ -142,7 +139,7 @@ export const AudioMemoApp: React.FC = () => {
         <div className="flex justify-between items-center text-xs">
           <div>
             <span className="block font-bold text-neutral-200">FIELD_RECORDING // TAPE</span>
-            <span className="text-[10px] text-neutral-400">44.1kHz • 16-bit • Stereo Lo-fi Drone</span>
+            <span className="text-[10px] text-neutral-400 font-medium">44.1kHz • 16-bit • Stereo Lo-fi Drone</span>
           </div>
           <span className="text-sm font-bold text-amber-400 font-mono">
             {formatTime(playbackTime)} / 01:00
@@ -164,7 +161,7 @@ export const AudioMemoApp: React.FC = () => {
         </button>
       </div>
 
-      <p className="text-[11px] text-neutral-500 text-center">
+      <p className="text-[11px] text-neutral-700 dark:text-neutral-400 text-center font-medium">
         Zero external audio files. Real-time synthesized ambient drone generated in-browser.
       </p>
     </div>

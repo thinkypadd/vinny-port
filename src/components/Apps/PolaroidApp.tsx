@@ -41,10 +41,10 @@ export const PolaroidApp: React.FC = () => {
   const activePhoto = photos[selectedIdx];
 
   return (
-    <div className="font-mono text-xs md:text-sm space-y-6">
+    <div className="font-mono text-xs md:text-sm space-y-6 text-black dark:text-white">
       <div className="flex items-center justify-between pb-3 border-b-2 border-black dark:border-white">
-        <span className="font-bold text-black dark:text-white">GALLERY: 35MM_RAW</span>
-        <span className="text-neutral-500">
+        <span className="font-bold text-black dark:text-white text-sm">GALLERY: 35MM_RAW</span>
+        <span className="text-neutral-600 dark:text-neutral-400 font-semibold">
           [{selectedIdx + 1} / {photos.length}]
         </span>
       </div>
@@ -57,10 +57,10 @@ export const PolaroidApp: React.FC = () => {
         >
           {/* Film Grain & Authentic Reticle */}
           <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:10px_10px]" />
-          <div className="absolute top-2 left-2 text-[9px] text-neutral-500 font-mono">
+          <div className="absolute top-2 left-2 text-[9px] text-neutral-400 font-mono font-medium">
             KODAK_TX_400 // {activePhoto.date}
           </div>
-          <div className="absolute bottom-2 right-2 text-[9px] text-neutral-500 font-mono">
+          <div className="absolute bottom-2 right-2 text-[9px] text-neutral-400 font-mono font-medium">
             EXP_{activePhoto.id}
           </div>
 
@@ -69,18 +69,18 @@ export const PolaroidApp: React.FC = () => {
             <span className="text-xs font-bold text-neutral-200 tracking-widest block">
               {activePhoto.title}
             </span>
-            <span className="text-[10px] text-neutral-400 mt-1 block">
+            <span className="text-[10px] text-neutral-300 mt-1 block font-medium">
               {activePhoto.location}
             </span>
           </div>
         </div>
 
-        {/* Polaroid handwritten-style metadata */}
-        <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800 space-y-1">
-          <p className="text-xs text-neutral-800 dark:text-neutral-200 leading-relaxed font-mono">
+        {/* Polaroid notes */}
+        <div className="pt-2 border-t border-neutral-300 dark:border-neutral-800 space-y-1.5">
+          <p className="text-xs text-black dark:text-neutral-100 leading-relaxed font-mono font-medium">
             "{activePhoto.note}"
           </p>
-          <div className="flex justify-between items-center text-[10px] text-neutral-400 pt-1">
+          <div className="flex justify-between items-center text-[10px] text-neutral-600 dark:text-neutral-400 pt-1 font-semibold">
             <span>LOC: {activePhoto.location}</span>
             <span>DATE: {activePhoto.date}</span>
           </div>
@@ -93,10 +93,10 @@ export const PolaroidApp: React.FC = () => {
           <button
             key={item.id}
             onClick={() => setSelectedIdx(index)}
-            className={`px-3 py-1 border text-xs font-mono transition-colors cursor-pointer ${
+            className={`px-3 py-1 border text-xs font-mono font-medium transition-colors cursor-pointer ${
               selectedIdx === index
-                ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
-                : 'bg-transparent text-neutral-600 dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 hover:border-black dark:hover:border-white'
+                ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-[2px_2px_0_rgba(0,0,0,0.3)]'
+                : 'bg-neutral-100 text-black border-neutral-400 dark:bg-transparent dark:text-neutral-300 dark:border-neutral-700 hover:border-black dark:hover:border-white'
             }`}
           >
             FRAME_{index + 1}

@@ -1,303 +1,441 @@
-import React, { useState, useEffect } from 'react';
-import { AppId, OsTheme, WindowState } from './types';
-import { MenuBar } from './components/MacOS/MenuBar';
-import { Dock } from './components/MacOS/Dock';
-import { Taskbar } from './components/Win98/Taskbar';
-import { StartMenu } from './components/Win98/StartMenu';
-import { DesktopIcons } from './components/DesktopIcons';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ItemId, WindowState, DesktopItem } from './types';
+import { DesktopIcon } from './components/DesktopIcon';
+import { TopNav } from './components/TopNav';
+import { BottomBar } from './components/BottomBar';
 import { Window } from './components/Window';
-import { AboutApp } from './components/Apps/AboutApp';
-import { ProjectsApp } from './components/Apps/ProjectsApp';
-import { SkillsApp } from './components/Apps/SkillsApp';
+import { NuThoughtsApp } from './components/Apps/NuThoughtsApp';
+import { WorksApp } from './components/Apps/WorksApp';
+import { ArchiveApp } from './components/Apps/ArchiveApp';
+import { PolaroidApp } from './components/Apps/PolaroidApp';
+import { ResumeApp } from './components/Apps/ResumeApp';
+import { AudioMemoApp } from './components/Apps/AudioMemoApp';
 import { TerminalApp } from './components/Apps/TerminalApp';
-import { ContactApp } from './components/Apps/ContactApp';
-import { SettingsApp } from './components/Apps/SettingsApp';
-import { CrtOverlay } from './components/CrtOverlay';
-import { playSound } from './utils/sound';
+import { playSound, setSoundEnabled } from './utils/sound';
 
-export const App: React.FC = () => {
-  const [theme, setTheme] = useState<OsTheme>('macos');
-  const [crtEffect, setCrtEffect] = useState(false);
-  const [startMenuOpen, setStartMenuOpen] = useState(false);
-  const [activeWindowId, setActiveWindowId] = useState<AppId | null>('about');
-  const [highestZ, setHighestZ] = useState(20);
+// Initial Desktop Positions (inspired by oklama.com's organic scatter)
+const getDefaultItems = (width: number, height: number): DesktopItem[] => {
+  const isMobile = width < 768;
 
-  // Initial Window Layouts
-  const [windows, setWindows] = useState<WindowState[]>([
+  if (isMobile) {
+    const col1 = 30;
+    const col2 = Math.min(width - 120, 160);
+    return [
+      { id: 'nuthoughts', label: 'nu thoughts', iconType: 'folder-manila', position: { x: col1, y: 80 } },
+      { id: 'works', label: 'selected works', iconType: 'folder-black', position: { x: col2, y: 80 } },
+      { id: 'archive', label: 'archive', iconType: 'folder-gray', position: { x: col1, y: 200 } },
+      { id: 'polaroid', label: 'polaroid.raw', iconType: 'polaroid', position: { x: col2, y: 200 } },
+      { id: 'resume', label: 'resume.txt', iconType: 'text', position: { x: col1, y: 320 } },
+      { id: 'audio', label: 'memo_01.wav', iconType: 'audio', position: { x: col2, y: 320 } },
+      { id: 'terminal', label: 'terminal.sh', iconType: 'terminal', position: { x: col1, y: 440 } }
+    ];
+  }
+
+  // Desktop viewport coordinates
+  return [
     {
-      id: 'about',
-      title: 'About Me - Alex Rivera',
-      isOpen: true,
-      isMinimized: false,
-      isMaximized: false,
-      zIndex: 10,
-      position: { x: 40, y: 55 },
-      size: { width: 560, height: 460 },
+      id: 'nuthoughts',
+      label: 'nu thoughts',
+      iconType: 'folder-manila',
+      position: { x: Math.floor(width * 0.64), y: Math.floor(height * 0.68) }
     },
     {
-      id: 'projects',
-      title: 'Projects & Repositories',
-      isOpen: false,
-      isMinimized: false,
-      isMaximized: false,
-      zIndex: 9,
-      position: { x: 120, y: 80 },
-      size: { width: 640, height: 480 },
+      id: 'works',
+      label: 'selected works',
+      iconType: 'folder-black',
+      position: { x: Math.floor(width * 0.54), y: Math.floor(height * 0.16) }
     },
     {
-      id: 'skills',
-      title: 'Capabilities & Stack',
-      isOpen: false,
-      isMinimized: false,
-      isMaximized: false,
-      zIndex: 8,
-      position: { x: 180, y: 110 },
-      size: { width: 540, height: 420 },
+      id: 'archive',
+      label: 'archive',
+      iconType: 'folder-gray',
+      position: { x: Math.floor(width * 0.16), y: Math.floor(height * 0.44) }
+    },
+    {
+      id: 'polaroid',
+      label: 'polaroid.raw',
+      iconType: 'polaroid',
+      position: { x: Math.floor(width * 0.46), y: Math.floor(height * 0.46) }
+    },
+    {
+      id: 'resume',
+      label: 'resume.txt',
+      iconType: 'text',
+      position: { x: Math.floor(width * 0.22), y: Math.floor(height * 0.18) }
+    },
+    {
+      id: 'audio',
+      label: 'memo_01.wav',
+      iconType: 'audio',
+      position: { x: Math.floor(width * 0.26), y: Math.floor(height * 0.68) }
     },
     {
       id: 'terminal',
-      title: 'Terminal - Developer Shell',
+      label: 'terminal.sh',
+      iconType: 'terminal',
+      position: { x: Math.floor(width * 0.74), y: Math.floor(height * 0.32) }
+    }
+  ];
+};
+
+export const App: React.FC = () => {
+  const [isDark, setIsDark] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);
+  const [highestZ, setHighestZ] = useState(20);
+
+  // Desktop Icons
+  const [items, setItems] = useState<DesktopItem[]>(() => {
+    const w = typeof window !== 'undefined' ? window.innerWidth : 1024;
+    const h = typeof window !== 'undefined' ? window.innerHeight : 768;
+    return getDefaultItems(w, h);
+  });
+
+  // Windows State
+  const [windows, setWindows] = useState<Record<ItemId, WindowState>>({
+    nuthoughts: {
+      id: 'nuthoughts',
+      title: 'nu thoughts // statement.txt',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 10,
+      position: { x: 80, y: 70 },
+      size: { width: 560, height: 580 }
+    },
+    works: {
+      id: 'works',
+      title: 'Directory: /selected-works',
       isOpen: false,
       isMinimized: false,
       isMaximized: false,
       zIndex: 11,
-      position: { x: 220, y: 140 },
-      size: { width: 560, height: 380 },
+      position: { x: 140, y: 90 },
+      size: { width: 660, height: 520 }
     },
-    {
-      id: 'contact',
-      title: 'Contact & Communication',
-      isOpen: false,
-      isMinimized: false,
-      isMaximized: false,
-      zIndex: 7,
-      position: { x: 260, y: 170 },
-      size: { width: 560, height: 440 },
-    },
-    {
-      id: 'settings',
-      title: 'System Preferences & Theme',
+    archive: {
+      id: 'archive',
+      title: 'Directory: /archive',
       isOpen: false,
       isMinimized: false,
       isMaximized: false,
       zIndex: 12,
-      position: { x: 300, y: 190 },
-      size: { width: 520, height: 360 },
+      position: { x: 180, y: 110 },
+      size: { width: 620, height: 460 }
     },
-  ]);
-
-  // Adjust default positions for mobile screens on load
-  useEffect(() => {
-    if (window.innerWidth < 640) {
-      setWindows((prev) =>
-        prev.map((w) => ({
-          ...w,
-          position: { x: 10, y: theme === 'win98' ? 10 : 40 },
-          size: { width: window.innerWidth - 20, height: window.innerHeight - 100 },
-        }))
-      );
+    polaroid: {
+      id: 'polaroid',
+      title: '35mm_raw // contact_sheet',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 13,
+      position: { x: 200, y: 80 },
+      size: { width: 520, height: 540 }
+    },
+    resume: {
+      id: 'resume',
+      title: 'resume.txt (UTF-8)',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 14,
+      position: { x: 220, y: 100 },
+      size: { width: 640, height: 520 }
+    },
+    audio: {
+      id: 'audio',
+      title: 'audio_tape // memo_01.wav',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 15,
+      position: { x: 250, y: 120 },
+      size: { width: 480, height: 380 }
+    },
+    terminal: {
+      id: 'terminal',
+      title: 'vinny@shell: ~ (zsh)',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 16,
+      position: { x: 160, y: 130 },
+      size: { width: 580, height: 400 }
+    },
+    contact: {
+      id: 'contact',
+      title: 'Connect & Dispatch',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 17,
+      position: { x: 200, y: 140 },
+      size: { width: 500, height: 360 }
     }
+  });
+
+  // Apply dark mode class to html element
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
+
+  // Bring window to front
+  const focusWindow = useCallback((id: ItemId) => {
+    setHighestZ((prev) => {
+      const nextZ = prev + 1;
+      setWindows((w) => ({
+        ...w,
+        [id]: { ...w[id], zIndex: nextZ, isMinimized: false }
+      }));
+      return nextZ;
+    });
   }, []);
 
-  const bringToFront = (id: AppId) => {
-    const nextZ = highestZ + 1;
-    setHighestZ(nextZ);
-    setActiveWindowId(id);
-    setWindows((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, zIndex: nextZ, isMinimized: false } : w))
-    );
-  };
-
-  const handleSetTheme = (newTheme: OsTheme) => {
-    setTheme(newTheme);
-    playSound('switch');
-  };
-
-  const handleOpenApp = (id: AppId) => {
+  // Open window
+  const openApp = useCallback((id: ItemId) => {
     playSound('open');
-    const nextZ = highestZ + 1;
-    setHighestZ(nextZ);
-    setActiveWindowId(id);
-    setWindows((prev) =>
-      prev.map((w) =>
-        w.id === id
-          ? {
-              ...w,
-              isOpen: true,
-              isMinimized: false,
-              zIndex: nextZ,
-            }
-          : w
-      )
-    );
-  };
+    setHighestZ((prev) => {
+      const nextZ = prev + 1;
+      setWindows((w) => {
+        // If on small screen, ensure window is centered or full
+        const isMobile = window.innerWidth < 640;
+        const posX = isMobile ? 10 : Math.min(Math.max(20, w[id].position.x), window.innerWidth - 300);
+        const posY = isMobile ? 20 : Math.min(Math.max(50, w[id].position.y), window.innerHeight - 200);
 
-  const handleCloseApp = (id: AppId) => {
-    playSound(theme === 'win98' ? 'click98' : 'clickMac');
-    setWindows((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, isOpen: false } : w))
-    );
-    if (activeWindowId === id) {
-      const remaining = windows.filter((w) => w.isOpen && w.id !== id && !w.isMinimized);
-      if (remaining.length > 0) {
-        const top = remaining.sort((a, b) => b.zIndex - a.zIndex)[0];
-        setActiveWindowId(top.id);
-      } else {
-        setActiveWindowId(null);
+        return {
+          ...w,
+          [id]: {
+            ...w[id],
+            isOpen: true,
+            isMinimized: false,
+            zIndex: nextZ,
+            position: { x: posX, y: posY }
+          }
+        };
+      });
+      return nextZ;
+    });
+  }, []);
+
+  // Close window
+  const closeWindow = useCallback((id: ItemId) => {
+    playSound('close');
+    setWindows((w) => ({
+      ...w,
+      [id]: { ...w[id], isOpen: false }
+    }));
+  }, []);
+
+  // Minimize window
+  const minimizeWindow = useCallback((id: ItemId) => {
+    playSound('switch');
+    setWindows((w) => ({
+      ...w,
+      [id]: { ...w[id], isMinimized: true }
+    }));
+  }, []);
+
+  // Toggle maximize
+  const toggleMaximize = useCallback((id: ItemId) => {
+    playSound('switch');
+    setWindows((w) => ({
+      ...w,
+      [id]: { ...w[id], isMaximized: !w[id].isMaximized }
+    }));
+  }, []);
+
+  // Keyboard navigation & shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        // Close topmost window
+        const openWins = Object.values(windows).filter((win) => win.isOpen && !win.isMinimized);
+        if (openWins.length > 0) {
+          const topWin = openWins.reduce((max, curr) => (curr.zIndex > max.zIndex ? curr : max));
+          closeWindow(topWin.id);
+        } else {
+          setSelectedItemId(null);
+        }
+      } else if (e.key === 'Enter' && selectedItemId) {
+        openApp(selectedItemId);
       }
-    }
-  };
+    };
 
-  const handleMinimizeApp = (id: AppId) => {
-    playSound(theme === 'win98' ? 'click98' : 'clickMac');
-    setWindows((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, isMinimized: true } : w))
-    );
-    if (activeWindowId === id) {
-      const remaining = windows.filter((w) => w.isOpen && w.id !== id && !w.isMinimized);
-      if (remaining.length > 0) {
-        const top = remaining.sort((a, b) => b.zIndex - a.zIndex)[0];
-        setActiveWindowId(top.id);
-      } else {
-        setActiveWindowId(null);
-      }
-    }
-  };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [windows, selectedItemId, closeWindow, openApp]);
 
-  const handleToggleMaximize = (id: AppId) => {
-    playSound(theme === 'win98' ? 'click98' : 'clickMac');
-    setWindows((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, isMaximized: !w.isMaximized } : w))
-    );
-    bringToFront(id);
-  };
-
-  const handleUpdatePosition = (id: AppId, x: number, y: number) => {
-    setWindows((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, position: { x, y } } : w))
+  // Handle icon drag update
+  const handleDragEnd = (id: ItemId, newPos: { x: number; y: number }) => {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, position: newPos } : item))
     );
   };
 
-  const handleTaskbarWindowClick = (id: AppId) => {
-    const win = windows.find((w) => w.id === id);
-    if (!win) return;
-
-    if (activeWindowId === id && !win.isMinimized) {
-      // Toggle minimize
-      handleMinimizeApp(id);
-    } else {
-      bringToFront(id);
-    }
+  // Tidy desktop icon positions
+  const handleTidy = () => {
+    playSound('switch');
+    setItems(getDefaultItems(window.innerWidth, window.innerHeight));
   };
 
-  const activeWindow = windows.find((w) => w.id === activeWindowId);
-  const activeTitle = activeWindow ? activeWindow.title : 'Finder';
+  // Toggle theme
+  const handleToggleTheme = () => {
+    playSound('switch');
+    setIsDark((prev) => !prev);
+  };
+
+  // Toggle audio
+  const handleToggleSound = () => {
+    const nextVal = !soundOn;
+    setSoundOn(nextVal);
+    setSoundEnabled(nextVal);
+    if (nextVal) playSound('click');
+  };
+
+  // Active top window for styling
+  const activeWindowId = Object.values(windows)
+    .filter((w) => w.isOpen && !w.isMinimized)
+    .reduce<WindowState | null>((top, curr) => (!top || curr.zIndex > top.zIndex ? curr : top), null)?.id;
 
   return (
     <div
-      className={`fixed inset-0 overflow-hidden w-screen h-screen select-none ${
-        theme === 'win98' ? 'bg-[#008080]' : 'bg-[#0d1117]'
+      className={`min-h-screen w-full font-mono relative overflow-hidden transition-colors duration-150 ${
+        isDark ? 'bg-black text-white' : 'bg-[#fafafa] text-black'
       }`}
-      onClick={() => {
-        if (startMenuOpen) setStartMenuOpen(false);
-      }}
+      onClick={() => setSelectedItemId(null)}
     >
-      {/* Background Wallpaper */}
-      {theme === 'macos' && (
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Subtle Sonoma Dark Abstract Wallpaper */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#121624] via-[#1a1c2e] to-[#0c0e18]" />
-          <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
-        </div>
-      )}
+      {/* Subtle retro dot grid canvas */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-20 dark:opacity-10"
+        style={{
+          backgroundImage: isDark
+            ? 'radial-gradient(#ffffff 1px, transparent 1px)'
+            : 'radial-gradient(#000000 1px, transparent 1px)',
+          backgroundSize: '24px 24px'
+        }}
+      />
 
-      {/* Win98 Desktop Brand watermark */}
-      {theme === 'win98' && (
-        <div className="absolute bottom-12 right-6 pointer-events-none text-right font-win98 select-none opacity-20">
-          <div className="text-3xl font-bold text-white tracking-widest">Windows 98</div>
-          <div className="text-xs text-white">Second Edition</div>
-        </div>
-      )}
+      {/* Fixed Minimalist Top Header */}
+      <TopNav
+        onOpenApp={openApp}
+        onTidyIcons={handleTidy}
+        isDark={isDark}
+        onToggleTheme={handleToggleTheme}
+        soundEnabled={soundOn}
+        onToggleSound={handleToggleSound}
+      />
 
-      {/* Top MenuBar (macOS) */}
-      {theme === 'macos' && (
-        <MenuBar
-          activeAppTitle={activeTitle}
-          onOpenApp={handleOpenApp}
-          onSetTheme={handleSetTheme}
-        />
-      )}
-
-      {/* Desktop Icons */}
-      <DesktopIcons theme={theme} onOpenApp={handleOpenApp} />
-
-      {/* Windows Layer */}
-      {windows.map((win) => (
-        <Window
-          key={win.id}
-          window={win}
-          theme={theme}
-          isActive={activeWindowId === win.id && !win.isMinimized}
-          onFocus={() => bringToFront(win.id)}
-          onClose={() => handleCloseApp(win.id)}
-          onMinimize={() => handleMinimizeApp(win.id)}
-          onToggleMaximize={() => handleToggleMaximize(win.id)}
-          onUpdatePosition={(x, y) => handleUpdatePosition(win.id, x, y)}
-        >
-          {win.id === 'about' && <AboutApp theme={theme} />}
-          {win.id === 'projects' && <ProjectsApp theme={theme} />}
-          {win.id === 'skills' && <SkillsApp theme={theme} />}
-          {win.id === 'terminal' && (
-            <TerminalApp
-              theme={theme}
-              onSetTheme={handleSetTheme}
-              onOpenApp={handleOpenApp}
+      {/* Desktop Canvas for Draggable Icons */}
+      <main className="absolute inset-0 overflow-hidden select-none z-10 pointer-events-none">
+        <div className="absolute inset-0 pointer-events-auto">
+          {items.map((item) => (
+            <DesktopIcon
+              key={item.id}
+              item={item}
+              isSelected={selectedItemId === item.id}
+              onSelect={(id) => {
+                playSound('click');
+                setSelectedItemId(id);
+              }}
+              onOpen={(id) => openApp(id)}
+              onDragEnd={handleDragEnd}
             />
-          )}
-          {win.id === 'contact' && <ContactApp theme={theme} />}
-          {win.id === 'settings' && (
-            <SettingsApp
-              theme={theme}
-              onSetTheme={handleSetTheme}
-              crtEffect={crtEffect}
-              onToggleCrt={() => setCrtEffect(!crtEffect)}
-            />
-          )}
-        </Window>
-      ))}
+          ))}
+        </div>
+      </main>
 
-      {/* Bottom Dock (macOS) */}
-      {theme === 'macos' && (
-        <Dock
-          windows={windows}
-          onOpenApp={handleOpenApp}
-          onSetTheme={handleSetTheme}
-        />
-      )}
+      {/* Floating Brutalist Windows */}
+      {/* 1. Nu Thoughts App */}
+      <Window
+        windowState={windows.nuthoughts}
+        isActive={activeWindowId === 'nuthoughts'}
+        onFocus={() => focusWindow('nuthoughts')}
+        onClose={() => closeWindow('nuthoughts')}
+        onMinimize={() => minimizeWindow('nuthoughts')}
+        onToggleMaximize={() => toggleMaximize('nuthoughts')}
+      >
+        <NuThoughtsApp onBack={() => closeWindow('nuthoughts')} />
+      </Window>
 
-      {/* Bottom Taskbar & Start Menu (Windows 98) */}
-      {theme === 'win98' && (
-        <>
-          <StartMenu
-            isOpen={startMenuOpen}
-            onClose={() => setStartMenuOpen(false)}
-            onOpenApp={handleOpenApp}
-            onSetTheme={handleSetTheme}
-          />
-          <Taskbar
-            windows={windows}
-            activeWindowId={activeWindowId}
-            startMenuOpen={startMenuOpen}
-            onToggleStartMenu={() => setStartMenuOpen(!startMenuOpen)}
-            onWindowClick={handleTaskbarWindowClick}
-            onSetTheme={handleSetTheme}
-          />
-        </>
-      )}
+      {/* 2. Selected Works App */}
+      <Window
+        windowState={windows.works}
+        isActive={activeWindowId === 'works'}
+        onFocus={() => focusWindow('works')}
+        onClose={() => closeWindow('works')}
+        onMinimize={() => minimizeWindow('works')}
+        onToggleMaximize={() => toggleMaximize('works')}
+      >
+        <WorksApp />
+      </Window>
 
-      {/* Retro CRT Overlay filter if enabled */}
-      <CrtOverlay active={crtEffect} />
+      {/* 3. Archive App */}
+      <Window
+        windowState={windows.archive}
+        isActive={activeWindowId === 'archive'}
+        onFocus={() => focusWindow('archive')}
+        onClose={() => closeWindow('archive')}
+        onMinimize={() => minimizeWindow('archive')}
+        onToggleMaximize={() => toggleMaximize('archive')}
+      >
+        <ArchiveApp />
+      </Window>
+
+      {/* 4. Polaroid Photo Sheet */}
+      <Window
+        windowState={windows.polaroid}
+        isActive={activeWindowId === 'polaroid'}
+        onFocus={() => focusWindow('polaroid')}
+        onClose={() => closeWindow('polaroid')}
+        onMinimize={() => minimizeWindow('polaroid')}
+        onToggleMaximize={() => toggleMaximize('polaroid')}
+      >
+        <PolaroidApp />
+      </Window>
+
+      {/* 5. Resume / CV */}
+      <Window
+        windowState={windows.resume}
+        isActive={activeWindowId === 'resume'}
+        onFocus={() => focusWindow('resume')}
+        onClose={() => closeWindow('resume')}
+        onMinimize={() => minimizeWindow('resume')}
+        onToggleMaximize={() => toggleMaximize('resume')}
+      >
+        <ResumeApp />
+      </Window>
+
+      {/* 6. Audio Memo App */}
+      <Window
+        windowState={windows.audio}
+        isActive={activeWindowId === 'audio'}
+        onFocus={() => focusWindow('audio')}
+        onClose={() => closeWindow('audio')}
+        onMinimize={() => minimizeWindow('audio')}
+        onToggleMaximize={() => toggleMaximize('audio')}
+      >
+        <AudioMemoApp />
+      </Window>
+
+      {/* 7. Interactive Terminal */}
+      <Window
+        windowState={windows.terminal}
+        isActive={activeWindowId === 'terminal'}
+        onFocus={() => focusWindow('terminal')}
+        onClose={() => closeWindow('terminal')}
+        onMinimize={() => minimizeWindow('terminal')}
+        onToggleMaximize={() => toggleMaximize('terminal')}
+      >
+        <TerminalApp onClose={() => closeWindow('terminal')} onOpenApp={(app) => openApp(app as ItemId)} />
+      </Window>
+
+      {/* Fixed Bottom Status & Socials */}
+      <BottomBar />
     </div>
   );
 };

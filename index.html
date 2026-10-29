@@ -1,18 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full font-mono">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Vinny | Developer Portfolio</title>
-    <meta name="description" content="Minimalist dual-theme portfolio running MacOS & Windows 98 environments." />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23008080'/><text y='65' font-size='50' font-family='monospace' font-weight='bold' fill='white' x='50%' text-anchor='middle'>V</text></svg>" />
-    <!-- Google Fonts for pixel-crisp retro feel and modern clean font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+    <title>vinny</title>
+    <meta name="description" content="Minimalist brutalist desktop portfolio inspired by oklama.com." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="vinny" />
+    <meta property="og:description" content="Minimalist digital desktop directory and engineering archive." />
+    <meta name="theme-color" content="#ffffff" />
+    <!-- Pixel folder favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect x='8' y='14' width='22' height='6' fill='%23D99B26'/><rect x='10' y='12' width='18' height='4' fill='%23F4CF74'/><rect x='8' y='18' width='48' height='34' fill='%23C88B18'/><rect x='6' y='24' width='52' height='28' fill='%23F7DC8B'/></svg>" />
   </head>
-  <body class="overflow-hidden select-none bg-black text-slate-100 antialiased">
-    <div id="root"></div>
+  <body class="min-h-full flex flex-col text-sm bg-[#fafafa] dark:bg-black overflow-hidden select-none">
+    <div id="root" class="h-full w-full"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

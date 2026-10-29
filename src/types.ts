@@ -1,9 +1,24 @@
-export type OsTheme = 'macos' | 'win98';
+export type ItemId =
+  | 'nuthoughts'
+  | 'works'
+  | 'archive'
+  | 'polaroid'
+  | 'resume'
+  | 'audio'
+  | 'terminal'
+  | 'contact';
 
-export type AppId = 'about' | 'projects' | 'skills' | 'terminal' | 'contact' | 'settings';
+export interface DesktopItem {
+  id: ItemId;
+  label: string;
+  iconType: 'folder-manila' | 'folder-black' | 'folder-gray' | 'polaroid' | 'text' | 'audio' | 'terminal' | 'contact';
+  position: { x: number; y: number }; // percentage or pixel coordinates
+  subtext?: string;
+  urlPath?: string;
+}
 
 export interface WindowState {
-  id: AppId;
+  id: ItemId;
   title: string;
   isOpen: boolean;
   isMinimized: boolean;
@@ -16,39 +31,47 @@ export interface WindowState {
 export interface ProjectItem {
   id: string;
   title: string;
+  year: string;
+  category: string;
   description: string;
   tech: string[];
   link?: string;
   github?: string;
-  featured?: boolean;
   metrics?: string;
 }
 
-export interface SkillCategory {
+export interface ArchiveItem {
+  id: string;
   title: string;
-  skills: string[];
+  year: string;
+  type: string;
+  description: string;
+  link?: string;
 }
 
-export interface ExperienceItem {
-  role: string;
-  company: string;
-  period: string;
-  bullets: string[];
+export interface ThoughtSection {
+  date: string;
+  title?: string;
+  paragraphs: string[];
+  signature: string;
+  imageCaption?: string;
 }
 
 export interface PortfolioData {
   name: string;
+  moniker: string;
   title: string;
-  tagline: string;
   location: string;
-  bio: string[];
-  skills: SkillCategory[];
+  bio: string;
+  thought: ThoughtSection;
   projects: ProjectItem[];
-  experience: ExperienceItem[];
+  archive: ArchiveItem[];
+  skills: { category: string; items: string[] }[];
   contacts: {
     email: string;
     github: string;
+    twitter: string;
     linkedin: string;
-    twitter?: string;
+    source: string;
   };
 }

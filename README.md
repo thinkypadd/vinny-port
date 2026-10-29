@@ -1,71 +1,70 @@
-# vinny — Minimalist Desktop Portfolio
+# vinny
 
-A brutalist, minimalist digital desktop portfolio inspired by Kendrick Lamar's [oklama.com](https://oklama.com/). Built with React 19, TypeScript, Tailwind CSS, and Vite. Configured for zero-config deployment to **GitHub Pages**.
+```
+[desktop]
+├── nu thoughts      // statement & manifesto
+├── selected works   // systems, web & low-level projects
+├── archive          // prototypes & tools
+├── polaroid.raw     // 35mm contact sheet
+├── resume.txt       // competencies & record
+├── memo_01.wav      // in-browser lo-fi synthesizer
+└── terminal.sh      // interactive shell
+```
 
-## Aesthetic & Architecture
+A minimalist, brutalist desktop portfolio inspired by Kendrick Lamar’s [oklama.com](https://oklama.com/). Zero synthetic noise, raw monospace typography, draggable desktop artifacts, and zero-config deployment to **GitHub Pages**.
 
-- **Oklama Brutalist Aesthetic**: High-contrast monospace typography (`ui-monospace`), crisp pixelated retro desktop folders (manila, black, and gray), polaroid desktop sticker, and subtle signature `#cd3f25` brick-red hover accents.
-- **Draggable Desktop Artifacts**: Pick up and reposition folders, documents, audio tapes, and terminal scripts anywhere on screen with mouse or touch (`data-drag="true"`). Includes a `[tidy]` action to restore canonical positions.
-- **Documents & Apps**:
-  - **`nu thoughts`**: Statement letter styled directly after oklama's press release manifesto with back navigation, timestamp, personal prose, and 35mm photo insert.
-  - **`selected works`**: Brutalist directory table with category filters, project specs, performance metrics, live demo, and GitHub links.
-  - **`archive`**: Inventory of micro-tools, open-source libraries, and past experiments.
-  - **`polaroid.raw`**: Analog 35mm contact sheet viewer with film reticles and location notes.
-  - **`resume.txt`**: Monospace plain-text CV format with career records and core engineering competencies.
-  - **`memo_01.wav`**: In-browser ambient synthesizer generating gentle lo-fi tape drones using native Web Audio API (zero external audio files).
-  - **`terminal.sh`**: Minimalist interactive command shell (`help`, `ls`, `whoami`, `cat thoughts`, `projects`, `contact`, `clear`).
-- **Contrast Toggle**: Switch between stark off-white and inverted deep-black canvas (`[light]` / `[invert]`).
-- **Zero AI-Slop**: No glowing gradients, fake 3D glass, or bloated dependencies. 100% static, fast, accessible (WCAG AA).
+---
 
-## Development
+### 01. RUN
 
 ```bash
-# Install dependencies
+# install dependencies
 npm install
 
-# Start local dev server
+# launch dev server (http://localhost:5173)
 npm run dev
 ```
 
-Visit `http://localhost:5173`.
-
-## Production Build
+### 02. BUILD
 
 ```bash
+# compile static bundle to ./dist
 npm run build
+
+# preview local production build
 npm run preview
 ```
 
-Static build outputs directly to `./dist` with relative paths (`base: './'`), ready for any static hosting.
+### 03. DEPLOY // GITHUB PAGES
 
-## GitHub Pages Deployment
+Configured for native GitHub Actions deployment via `.github/workflows/deploy.yml`.
 
-### Option 1: Automated GitHub Actions (Recommended)
-
-A GitHub Actions workflow is preconfigured at `.github/workflows/deploy.yml`.
-
-1. Push this repository to GitHub:
+1. Push to GitHub:
    ```bash
    git remote add origin https://github.com/<username>/<repo-name>.git
    git branch -M main
    git push -u origin main
    ```
-2. In your GitHub repository:
-   - Navigate to **Settings** > **Pages**.
-   - Under **Build and deployment** > **Source**, select **GitHub Actions**.
-3. Every push to `main` will build and publish the site automatically.
+2. In repository settings:
+   - Go to **Settings** > **Pages**.
+   - Under **Build and deployment** > **Source**, choose **GitHub Actions**.
+   - Site deploys automatically on push to `main`.
 
-### Option 2: Manual gh-pages Branch
+### 04. CONFIGURE
 
-```bash
-npm run build
-npx gh-pages -d dist
+All data, manifesto paragraphs, projects, archive lists, and contact links reside in a single file:
+
+```
+src/data/portfolio.ts
 ```
 
-## Customizing Your Content
+---
 
-All portfolio information, statement text, project listings, contact URLs, and skill tags are centralized in:
-
-- [`src/data/portfolio.ts`](src/data/portfolio.ts)
-
-Edit that file to customize your name, bio, manifesto, project catalog, and links.
+```
+spec //
+  engine   : react 19 + vite 6
+  styles   : tailwind css + pure monospace
+  audio    : native webaudio api (zero external assets)
+  modes    : stark light / inverted dark
+  paths    : relative ('./') for any cdn or subpath
+```
